@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://suba.local/schemas/phase1_contract.schema.json",
+  "title": "Submarine Simulation Phase 1 Contract",
+  "type": "object",
+  "required": [
+    "hull_geometry",
+    "physics_state",
+    "steering_output",
+    "environment"
+  ],
+  "properties": {
+    "hull_geometry": {
+      "type": "object",
+      "required": [
+        "length_m",
+        "max_diameter_m",
+        "fin_offset_x",
+        "naca_profile",
+        "fin_surface_area_m2"
+      ],
+      "properties": {
+        "length_m": { "type": "number", "exclusiveMinimum": 0 },
+        "max_diameter_m": { "type": "number", "exclusiveMinimum": 0 },
+        "fin_offset_x": { "type": "number" },
+        "naca_profile": { "type": "string" },
+        "fin_surface_area_m2": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "physics_state": {
+      "type": "object",
+      "required": ["velocity_ms", "pitch_deg", "yaw_deg", "depth_m"],
+      "properties": {
+        "velocity_ms": { "type": "number", "minimum": 0 },
+        "pitch_deg": { "type": "number" },
+        "yaw_deg": { "type": "number" },
+        "depth_m": { "type": "number", "minimum": 0 }
+      }
+    },
+    "steering_output": {
+      "type": "object",
+      "required": ["target_fin_angle_deg", "motor_torque_nm"],
+      "properties": {
+        "target_fin_angle_deg": { "type": "number" },
+        "motor_torque_nm": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["fluid_density_kgm3", "current_vector_ms", "sensor_noise_sigma"],
+      "properties": {
+        "fluid_density_kgm3": { "type": "number", "minimum": 900, "maximum": 1300 },
+        "current_vector_ms": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" }
+        },
+        "sensor_noise_sigma": { "type": "number", "minimum": 0, "maximum": 0.1 }
+      }
+    }
+  }
+}

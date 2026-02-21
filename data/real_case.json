@@ -1,0 +1,24 @@
+{
+  "hull_geometry": {
+    "length_m": 3.05,
+    "max_diameter_m": 0.54,
+    "fin_offset_x": -1.2,
+    "naca_profile": "0009",
+    "fin_surface_area_m2": 0.08
+  },
+  "physics_state": {
+    "velocity_ms": 2.9,
+    "pitch_deg": 2.8,
+    "yaw_deg": 1.7,
+    "depth_m": 3.2
+  },
+  "steering_output": {
+    "target_fin_angle_deg": 18.0,
+    "motor_torque_nm": 110.0
+  },
+  "environment": {
+    "fluid_density_kgm3": 1000.0,
+    "current_vector_ms": [0.3, 0.15, 0.0],
+    "sensor_noise_sigma": 0.04
+  }
+}
