@@ -16,6 +16,7 @@ class SubmarineApp:
         self.hull_generator = HullGenerator()
         self.physics_engine = PhysicsEngine()
         self.ui_controller = UIController()
+        self.ui_controller.attach_app(self)
         self.telemetry_rows: list[dict] = []
 
     def load_case(self, json_path: str | Path) -> None:
