@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mode", choices=["base", "real"], default="base", help="Environment mode.")
     parser.add_argument("--steps", type=int, default=5, help="Simulation steps.")
     parser.add_argument("--report", default="logs/phase1_report.csv", help="CSV report output path.")
+    parser.add_argument("--interactive", action="store_true", help="Run interactive simulation prompt loop.")
     return parser.parse_args()
 
 
@@ -30,17 +31,23 @@ def _format_metric(name: str, value: float | bool | str) -> str:
 
 def main() -> int:
     args = parse_args()
+    if args.interactive:
+        return run_interactive()
+    return run_once(args.case, args.mode, args.steps, args.report)
+
+
+def run_once(case: str, mode: str, steps: int, report: str) -> int:
     app = SubmarineApp()
     ui = app.ui_controller
 
-    ui.load_case(args.case)
-    ui.set_environment_mode(args.mode)
-    rows = ui.run_simulation(args.steps)
-    ui.save_report(args.report)
+    ui.load_case(case)
+    ui.set_environment_mode(mode)
+    rows = ui.run_simulation(steps)
+    ui.save_report(report)
 
     last = rows[-1] if rows else {}
     print("Phase 1 Simulation UI")
-    print(f"case={args.case} mode={ui.state.environment_mode} steps={args.steps}")
+    print(f"case={case} mode={ui.state.environment_mode} steps={steps}")
     if last:
         print(
             " | ".join(
@@ -55,14 +62,66 @@ def main() -> int:
         )
 
     summary = {
-        "case": args.case,
+        "case": case,
         "mode": ui.state.environment_mode,
-        "steps": args.steps,
+        "steps": steps,
         "rows_logged": len(rows),
-        "report": args.report,
+        "report": report,
         "last_snapshot": last,
     }
     print(json.dumps(summary, indent=2))
+    return 0
+
+
+def _prompt(message: str, default: str) -> str:
+    value = input(f"{message} [{default}]: ").strip()
+    return value or default
+
+
+def _prompt_steps(default: int) -> int:
+    while True:
+        value = _prompt("steps", str(default))
+        try:
+            steps = int(value)
+        except ValueError:
+            print("Invalid steps value. Enter an integer.")
+            continue
+        if steps <= 0:
+            print("Steps must be > 0.")
+            continue
+        return steps
+
+
+def _prompt_mode(default: str) -> str:
+    while True:
+        mode = _prompt("mode (base/real)", default).lower()
+        if mode in {"base", "real"}:
+            return mode
+        print("Mode must be 'base' or 'real'.")
+
+
+def run_interactive() -> int:
+    print("Phase 1 Interactive Simulation UI")
+    case = "data/base_case.json"
+    mode = "base"
+    steps = 5
+    report = "logs/phase1_report.csv"
+
+    while True:
+        case = _prompt("case", case)
+        mode = _prompt_mode(mode)
+        steps = _prompt_steps(steps)
+        report = _prompt("report", report)
+
+        try:
+            run_once(case, mode, steps, report)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Simulation failed: {exc}")
+
+        again = _prompt("run again? (y/n)", "n").lower()
+        if again not in {"y", "yes"}:
+            break
+
     return 0
 
 
