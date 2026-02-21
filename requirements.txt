@@ -1,0 +1,16 @@
+# --- Core Simulation & Rendering ---
+open3d==0.18.0          # 3D Visualization and mesh processing
+numpy==1.26.4           # High-speed vector math for physics/friction
+scipy==1.12.0           # Advanced physics constants and interpolation
+
+# --- UI & Interaction ---
+# Open3D has a built-in GUI, but these are helpful for complex dashboards
+dearpygui==1.11.1       # Fast, GPU-accelerated UI for sliders/telemetry
+
+# --- Data & Communication ---
+pandas==2.2.0           # Logging simulation data to CSV for analysis
+pydantic==2.6.0         # Validating the JSON data contract from partner
+
+# --- Utilities ---
+pyserial==3.5           # (Optional) If you later connect to actual sensors
+matplotlib==3.8.0       # For 2D plotting of steering error/PID graphs
