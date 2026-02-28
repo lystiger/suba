@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""CLI entry point for one-shot Phase 1 simulation runs."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,12 +10,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src/scripts") not in sys.path:
+    # Allow importing package modules when script is run directly.
     sys.path.insert(0, str(ROOT / "src"))
 
 from submarine_sim import SubmarineApp
 
 
 def parse_args() -> argparse.Namespace:
+    """Define and parse command-line arguments."""
+
     parser = argparse.ArgumentParser(description="Run Phase 1 submarine simulation starter.")
     parser.add_argument("--case", default="data/base_case.json", help="Path to case JSON.")
     parser.add_argument("--steps", type=int, default=5, help="Simulation steps to run.")
@@ -23,6 +28,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run simulation once, save CSV report, and print JSON summary."""
+
     args = parse_args()
     app = SubmarineApp()
     app.load_case(args.case)

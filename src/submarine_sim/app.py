@@ -1,3 +1,9 @@
+"""Main application coordinator for the Phase 1 simulation.
+
+This class wires together input loading, geometry generation,
+physics stepping, and output reporting.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -11,7 +17,10 @@ from .ui_controller import UIController
 
 
 class SubmarineApp:
+    """Single entry point used by CLI/UI/GUI runners."""
+
     def __init__(self) -> None:
+        # Build all subsystems once and keep shared state here.
         self.ingestor = MathIngestor()
         self.hull_generator = HullGenerator()
         self.physics_engine = PhysicsEngine()
@@ -20,6 +29,8 @@ class SubmarineApp:
         self.telemetry_rows: list[dict] = []
 
     def load_case(self, json_path: str | Path) -> None:
+        """Load and validate one JSON case, then rebuild the hull."""
+
         payload = self.ingestor.load_json(json_path)
         self.ingestor.validate_constraints()
         self.hull_generator.update_hull(
@@ -29,6 +40,8 @@ class SubmarineApp:
         )
 
     def update_scene(self) -> dict:
+        """Run one physics step and store the result for reporting."""
+
         payload = self.ingestor.current_params
         if payload is None:
             raise ValueError("No case loaded.")
@@ -53,15 +66,20 @@ class SubmarineApp:
             sensor_noise_sigma=sigma,
         )
 
+        # Convert dataclass snapshot to plain dictionary for CSV output.
         row = asdict(snap)
         row["environment_mode"] = self.ui_controller.state.environment_mode
         self.telemetry_rows.append(row)
         return row
 
     def run(self, steps: int = 10) -> list[dict]:
+        """Run multiple simulation steps and return all snapshots."""
+
         return [self.update_scene() for _ in range(steps)]
 
     def save_report(self, output_path: str | Path) -> None:
+        """Write accumulated telemetry rows to CSV."""
+
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         if not self.telemetry_rows:

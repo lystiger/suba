@@ -6,6 +6,10 @@ Phase 1 submarine simulation starter project.
 
 This project loads a simulation case from JSON, validates the input contract, runs a lightweight physics step loop, and writes telemetry to CSV.
 
+Who this is for:
+- If you are new to programming, treat this as a small pipeline: read input -> compute values -> save output.
+- Most code is intentionally simple and split into small files with one responsibility each.
+
 Core flow:
 1. Load and validate case data (`data/*.json`) with `MathIngestor`.
 2. Build/update hull geometry from the case values.
@@ -17,6 +21,18 @@ The code is organized in:
 - `scripts/`: runnable entrypoints for CLI, text UI, and GUI.
 - `schemas/`: JSON schema contract for phase 1 input.
 - `data/`: example simulation cases.
+
+## Beginner File Guide
+
+- `src/submarine_sim/models.py`: data shapes used across the app (think "input fields grouped into objects").
+- `src/submarine_sim/math_ingestor.py`: reads JSON and checks values are safe/valid.
+- `src/submarine_sim/hull_generator.py`: creates simple hull geometry and area/volume values.
+- `src/submarine_sim/physics_engine.py`: formulas for drag, buoyancy, steering torque, and simple safety checks.
+- `src/submarine_sim/app.py`: coordinator that connects all modules and stores telemetry rows.
+- `src/submarine_sim/ui_controller.py`: small interface used by CLI/text UI/GUI to call app functions.
+- `scripts/run_phase1.py`: one-shot command line run.
+- `scripts/run_phase1_ui.py`: text-based UI (one-shot or interactive loop).
+- `scripts/run_phase1_gui.py` + `src/submarine_sim/open3d_ui.py`: desktop GUI using Open3D.
 
 ## Simple Setup (macOS)
 

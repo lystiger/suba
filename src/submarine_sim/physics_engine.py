@@ -1,3 +1,9 @@
+"""Physics calculations for the simplified Phase 1 simulator.
+
+The formulas here are intentionally lightweight so the workflow is easy
+to test and reason about.
+"""
+
 from __future__ import annotations
 
 import math
@@ -7,6 +13,8 @@ from dataclasses import dataclass
 
 @dataclass
 class PhysicsSnapshot:
+    """Output values produced by one simulation step."""
+
     drag_force_n: float
     buoyancy_force_n: float
     effective_velocity_ms: float
@@ -18,6 +26,8 @@ class PhysicsSnapshot:
 
 
 class PhysicsEngine:
+    """Encapsulates all physics-related calculations."""
+
     def __init__(self, gravity: float = 9.81) -> None:
         self.gravity = gravity
         self.water_density = 1000.0
@@ -25,12 +35,18 @@ class PhysicsEngine:
         self.noise_factor = 0.0
 
     def calculate_drag(self, velocity_ms: float, drag_coefficient: float, area_m2: float, density_kgm3: float) -> float:
+        """Return drag force using the standard drag equation."""
+
         return 0.5 * density_kgm3 * velocity_ms * velocity_ms * drag_coefficient * area_m2
 
     def calculate_buoyancy(self, volume_m3: float, density_kgm3: float) -> float:
+        """Return buoyancy force from displaced water."""
+
         return density_kgm3 * self.gravity * volume_m3
 
     def apply_environmental_noise(self, value: float, sigma: float) -> float:
+        """Optionally perturb a value with gaussian noise."""
+
         if sigma <= 0.0:
             return value
         return value + random.gauss(0.0, sigma * max(abs(value), 1e-6))
@@ -43,15 +59,25 @@ class PhysicsEngine:
         fin_offset_m: float,
         motor_torque_nm: float,
     ) -> tuple[float, float]:
+        """Estimate steering torque requirement and remaining margin."""
+
+        # We cap the angle ratio at 1.0 so this simple model stays bounded.
         angle_ratio = min(abs(target_fin_angle_deg) / 35.0, 1.0)
         torque_required = drag_force_n * abs(fin_offset_m) * angle_ratio
         return torque_required, motor_torque_nm - torque_required
 
     def cavitation_check(self, depth_m: float, velocity_ms: float) -> bool:
+        """Flag a basic cavitation risk condition."""
+
         return depth_m < 2.0 and velocity_ms > 5.0
 
     def stability_check(self, length_m: float, diameter_m: float) -> float:
-        # Simplified placeholder for Phase 1 checks.
+        """Return a simplified GM-like stability metric.
+
+        Positive values are interpreted as stable in this phase.
+        """
+
+        # Placeholder relation for Phase 1, not a full naval model.
         return (diameter_m * 0.2) - (length_m * 0.01)
 
     def step(
@@ -71,6 +97,9 @@ class PhysicsEngine:
         diameter_m: float,
         sensor_noise_sigma: float,
     ) -> PhysicsSnapshot:
+        """Run one complete physics update and return all outputs."""
+
+        # Convert 3D current vector into a single magnitude.
         current_mag = math.sqrt(sum(c * c for c in current_vector_ms))
         effective_velocity = max(0.0, velocity_ms + current_mag)
         noisy_velocity = self.apply_environmental_noise(effective_velocity, sensor_noise_sigma)

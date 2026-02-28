@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Text-based runner for Phase 1 simulation (single run or interactive loop)."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,12 +10,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
+    # Make package imports work when executing script from repository root.
     sys.path.insert(0, str(ROOT / "src"))
 
 from submarine_sim import SubmarineApp
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line flags for UI runner mode."""
+
     parser = argparse.ArgumentParser(description="Minimal Phase 1 simulation UI runner.")
     parser.add_argument("--case", default="data/base_case.json", help="Path to case JSON.")
     parser.add_argument("--mode", choices=["base", "real"], default="base", help="Environment mode.")
@@ -24,12 +29,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def _format_metric(name: str, value: float | bool | str) -> str:
+    """Pretty print one metric for terminal output."""
+
     if isinstance(value, float):
         return f"{name}: {value:.3f}"
     return f"{name}: {value}"
 
 
 def main() -> int:
+    """Choose interactive or one-shot mode."""
+
     args = parse_args()
     if args.interactive:
         return run_interactive()
@@ -37,6 +46,8 @@ def main() -> int:
 
 
 def run_once(case: str, mode: str, steps: int, report: str) -> int:
+    """Run one simulation session and print a short terminal summary."""
+
     app = SubmarineApp()
     ui = app.ui_controller
 
@@ -74,11 +85,15 @@ def run_once(case: str, mode: str, steps: int, report: str) -> int:
 
 
 def _prompt(message: str, default: str) -> str:
+    """Read one text input with a default value."""
+
     value = input(f"{message} [{default}]: ").strip()
     return value or default
 
 
 def _prompt_steps(default: int) -> int:
+    """Prompt until user enters a valid positive integer for steps."""
+
     while True:
         value = _prompt("steps", str(default))
         try:
@@ -93,6 +108,8 @@ def _prompt_steps(default: int) -> int:
 
 
 def _prompt_mode(default: str) -> str:
+    """Prompt until mode is either 'base' or 'real'."""
+
     while True:
         mode = _prompt("mode (base/real)", default).lower()
         if mode in {"base", "real"}:
@@ -101,6 +118,8 @@ def _prompt_mode(default: str) -> str:
 
 
 def run_interactive() -> int:
+    """Run repeated simulations from terminal prompts."""
+
     print("Phase 1 Interactive Simulation UI")
     case = "data/base_case.json"
     mode = "base"

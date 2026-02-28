@@ -1,3 +1,5 @@
+"""Input loading and validation for simulation JSON case files."""
+
 from __future__ import annotations
 
 import json
@@ -7,16 +9,22 @@ from .models import Environment, HullGeometry, PhysicsState, SimulationInput, St
 
 
 class MathIngestor:
+    """Loads JSON into dataclasses and checks safety constraints."""
+
     def __init__(self) -> None:
         self.current_params: SimulationInput | None = None
 
     def load_json(self, file_path: str | Path) -> SimulationInput:
+        """Read a case file, parse it, and keep it as current parameters."""
+
         path = Path(file_path)
         data = json.loads(path.read_text(encoding="utf-8"))
         self.current_params = self._parse_and_validate(data)
         return self.current_params
 
     def validate_constraints(self) -> None:
+        """Run phase-level limits that are separate from basic type checks."""
+
         if self.current_params is None:
             raise ValueError("No parameters loaded.")
 
@@ -27,6 +35,8 @@ class MathIngestor:
             raise ValueError("Target fin angle exceeds limit (+/-35deg).")
 
     def get_drag_coefficient(self) -> float:
+        """Return drag coefficient based on selected NACA profile."""
+
         if self.current_params is None:
             raise ValueError("No parameters loaded.")
 
@@ -35,11 +45,14 @@ class MathIngestor:
         return base_cd + profile_adjustment
 
     def _parse_and_validate(self, data: dict) -> SimulationInput:
+        """Build typed models from raw dict and validate value ranges."""
+
         hg = HullGeometry(**data["hull_geometry"])
         ps = PhysicsState(**data["physics_state"])
         so = SteeringOutput(**data["steering_output"])
         env = Environment(**data["environment"])
 
+        # Basic numeric sanity checks to fail early on invalid inputs.
         if hg.length_m <= 0.0:
             raise ValueError("length_m must be > 0.")
         if hg.max_diameter_m <= 0.0:

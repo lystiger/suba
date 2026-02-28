@@ -1,3 +1,5 @@
+"""Open3D-based desktop UI for running the Phase 1 simulation."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,9 +12,12 @@ from .app import SubmarineApp
 
 
 class Phase1Open3DUI:
+    """Builds and manages the Open3D window and all UI widgets."""
+
     def __init__(self) -> None:
         self.submarine_app = SubmarineApp()
 
+        # Create one main window and hook layout callback.
         self.window = gui.Application.instance.create_window("Phase 1 Submarine Simulation", 1400, 900)
         self.window.set_on_layout(self._on_layout)
 
@@ -39,6 +44,8 @@ class Phase1Open3DUI:
         self.window.add_child(self.environment_panel)
 
     def _setup_scene_placeholder(self) -> None:
+        """Add a simple axis so users see reference coordinates."""
+
         axis = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.5, origin=[0.0, 0.0, 0.0])
         axis.compute_vertex_normals()
         material = rendering.MaterialRecord()
@@ -47,6 +54,8 @@ class Phase1Open3DUI:
         self.scene.setup_camera(60.0, axis.get_axis_aligned_bounding_box(), axis.get_center())
 
     def _build_inputs_panel(self, spacing: int) -> None:
+        """Create controls for case path, steps, and run/export actions."""
+
         self.inputs_panel.add_child(gui.Label("Inputs"))
 
         self.inputs_panel.add_child(gui.Label("Case JSON"))
@@ -82,6 +91,8 @@ class Phase1Open3DUI:
         self.inputs_panel.add_child(self.status_label)
 
     def _build_telemetry_panel(self) -> None:
+        """Create read-only labels for latest physics results."""
+
         self.telemetry_panel.add_child(gui.Label("Telemetry"))
         self.telemetry_labels: dict[str, gui.Label] = {}
         fields = [
@@ -105,6 +116,8 @@ class Phase1Open3DUI:
         self.telemetry_panel.add_child(self.alert_label)
 
     def _build_environment_panel(self, spacing: int) -> None:
+        """Create environment mode/noise/safety controls."""
+
         self.environment_panel.add_child(gui.Label("Environment / Safety"))
 
         self.environment_panel.add_child(gui.Label("Mode"))
@@ -130,6 +143,8 @@ class Phase1Open3DUI:
         self.environment_panel.add_child(self.environment_state_label)
 
     def _on_layout(self, layout_context: gui.LayoutContext) -> None:
+        """Position panels whenever window size changes."""
+
         rect = self.window.content_rect
 
         bottom_height = int(rect.height * 0.23)
@@ -145,22 +160,30 @@ class Phase1Open3DUI:
         self.environment_panel.frame = gui.Rect(rect.x, rect.y + top_height, rect.width, bottom_height)
 
     def _on_mode_changed(self, mode: str, index: int) -> None:  # noqa: ARG002
+        """Handle combobox mode changes from the UI."""
+
         self.submarine_app.ui_controller.set_environment_mode(mode)
         self.noise_checkbox.checked = self.submarine_app.ui_controller.state.noise_enabled
         self._refresh_environment_state()
         self._set_status(f"mode set to {mode}")
 
     def _on_noise_toggled(self, is_checked: bool) -> None:
+        """Handle noise checkbox toggle."""
+
         self.submarine_app.ui_controller.set_noise_enabled(is_checked)
         self._refresh_environment_state()
         self._set_status(f"noise {'enabled' if is_checked else 'disabled'}")
 
     def _on_emergency_clicked(self) -> None:
+        """Handle emergency surface button click."""
+
         self.submarine_app.ui_controller.trigger_emergency_surface()
         self._refresh_environment_state()
         self._set_status("emergency surface triggered")
 
     def _on_load_clicked(self) -> None:
+        """Load case file entered in the text box."""
+
         case = self.case_input.text_value.strip()
         try:
             self.submarine_app.ui_controller.load_case(case)
@@ -170,6 +193,8 @@ class Phase1Open3DUI:
         self._set_status(f"loaded {case}")
 
     def _on_run_clicked(self) -> None:
+        """Load case, run steps, then show latest telemetry."""
+
         steps = self._read_steps()
         if steps is None:
             return
@@ -187,6 +212,8 @@ class Phase1Open3DUI:
         self._set_status(f"simulation complete ({len(rows)} steps)")
 
     def _on_save_clicked(self) -> None:
+        """Export currently collected telemetry to CSV."""
+
         report = self.report_input.text_value.strip()
         try:
             self.submarine_app.ui_controller.save_report(report)
@@ -196,6 +223,8 @@ class Phase1Open3DUI:
         self._set_status(f"report written to {Path(report)}")
 
     def _read_steps(self) -> int | None:
+        """Read and validate the steps input box."""
+
         raw_steps = self.steps_input.text_value.strip()
         try:
             steps = int(raw_steps)
@@ -209,6 +238,8 @@ class Phase1Open3DUI:
         return steps
 
     def _update_telemetry(self, snapshot: dict) -> None:
+        """Render latest snapshot values and generate alert messages."""
+
         for field, label in self.telemetry_labels.items():
             label.text = f"{field}: {snapshot.get(field, '-')}"
 
@@ -222,6 +253,8 @@ class Phase1Open3DUI:
         self.alert_label.text = f"Alerts: {', '.join(alerts) if alerts else 'none'}"
 
     def _refresh_environment_state(self) -> None:
+        """Update compact status text for environment controls."""
+
         state = self.submarine_app.ui_controller.state
         self.environment_state_label.text = (
             f"Mode: {state.environment_mode} | "
@@ -230,10 +263,14 @@ class Phase1Open3DUI:
         )
 
     def _set_status(self, message: str) -> None:
+        """Show short feedback at the bottom of the inputs panel."""
+
         self.status_label.text = f"Status: {message}"
 
 
 def run_gui() -> int:
+    """Initialize GUI framework and start event loop."""
+
     app = gui.Application.instance
     app.initialize()
     Phase1Open3DUI()

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Launch helper for the Open3D GUI runner."""
+
 from __future__ import annotations
 
 import os
@@ -11,6 +13,8 @@ if str(ROOT / "src") not in sys.path:
 
 
 def _configure_display_backend() -> None:
+    """Prefer X11 backend on Wayland systems that are known to fail with GLFW."""
+
     # Open3D/GLFW can crash on some Wayland+libdecor stacks; prefer X11 when available.
     session_type = os.environ.get("XDG_SESSION_TYPE", "").lower()
     has_x11_display = bool(os.environ.get("DISPLAY"))

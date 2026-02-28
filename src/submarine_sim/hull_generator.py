@@ -1,3 +1,5 @@
+"""Hull geometry helpers for creating and measuring a simple mesh."""
+
 from __future__ import annotations
 
 import math
@@ -13,11 +15,15 @@ except ImportError:  # pragma: no cover - optional for CI/headless
 
 @dataclass
 class HullProperties:
+    """Derived hull values needed by the physics engine."""
+
     area_m2: float
     volume_m3: float
 
 
 class HullGenerator:
+    """Creates a coarse submarine hull and computes geometric properties."""
+
     def __init__(self) -> None:
         self.submarine_mesh = None
         self.length_m = 3.0
@@ -25,6 +31,8 @@ class HullGenerator:
         self.fin_surface_area_m2 = 0.08
 
     def generate_myring_points(self, length_m: float, diameter_m: float, n_theta: int = 48, n_phi: int = 64) -> np.ndarray:
+        """Generate point samples for an ellipsoid-like hull shape."""
+
         a = length_m / 2.0
         b = diameter_m / 2.0
 
@@ -38,6 +46,8 @@ class HullGenerator:
         return np.column_stack((x.ravel(), y.ravel(), z.ravel()))
 
     def create_mesh(self, points: np.ndarray):
+        """Build a mesh from points; use fallback data if Open3D is unavailable."""
+
         if o3d is None:
             self.submarine_mesh = {"points": points}
             return self.submarine_mesh
@@ -50,6 +60,8 @@ class HullGenerator:
         return hull_mesh
 
     def update_hull(self, length_m: float, diameter_m: float, fin_surface_area_m2: float):
+        """Store latest dimensions and regenerate the hull mesh."""
+
         self.length_m = length_m
         self.diameter_m = diameter_m
         self.fin_surface_area_m2 = fin_surface_area_m2
@@ -57,13 +69,19 @@ class HullGenerator:
         return self.create_mesh(points)
 
     def get_hydro_area(self) -> float:
+        """Return frontal area used by drag equation."""
+
         radius = self.diameter_m / 2.0
         return math.pi * radius * radius
 
     def get_volume(self) -> float:
+        """Approximate hull volume as an ellipsoid."""
+
         a = self.length_m / 2.0
         b = self.diameter_m / 2.0
         return (4.0 / 3.0) * math.pi * a * b * b
 
     def get_properties(self) -> HullProperties:
+        """Collect all derived geometry values in one object."""
+
         return HullProperties(area_m2=self.get_hydro_area(), volume_m3=self.get_volume())
