@@ -1,4 +1,4 @@
-# suba
+# subsim
 
 Phase 1 submarine simulation starter project.
 
